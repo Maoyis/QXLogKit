@@ -26,8 +26,25 @@ func qx_debug(block:(()->Void)? = nil) -> Bool {
 }
 
 public struct QXLog {
-    public typealias ErrorHandler = (QXLog, Error)->Void
+    public typealias ErrorHandler = (QXLog, Error, Source)->Void
     /// 日志输出级别
+    public enum Source {
+        case unknown
+        case file(id:String, line:Int)
+        case funcation(file:String, name:String, line:Int)
+        
+        public var info:String {
+            switch self {
+            case .file(let path, let line): do {
+                return "\nFile:\(path)\nLine:\(line)\n"
+            }
+            case .funcation(let file, let name, let line): return "\nFile:\(file)\nFuncation:\(name)\nLine:\(line)\n"
+            default:
+                break
+            }
+            return ""
+        }
+    }
     public enum Level {
         case `default`
         /// 关闭输出
@@ -64,15 +81,15 @@ public struct QXLog {
     
     /// 错误日志
     /// - Parameter error: 错误
-    public func error(_ error:Error?, level:Level = .debug)  {
+    public func error(_ error:Error?, source:Source = .unknown, level:Level = .debug)  {
         guard let error = error else {
             return
         }
         if let handler = self.handler {
-            handler(self, error)
+            handler(self, error, source)
             return
         }
-        out(error, type: .error, level: level)
+        out(source.info, error, type: .error, level: level)
     }
     public func out(_ items: Any..., type:LogType = .default, level:Level = .default)  {
         guard supports.contains(type) else {
@@ -90,7 +107,7 @@ public struct QXLog {
             return
         }
         var  msg = items.map({"\($0)"}).joined(separator: " ")
-        let name = self.module != nil ? "[\(self.module!)]" : ""
+        let name = self.module != nil ? "[\(self.module!)] : " : ""
         if type == .warning {
             msg = "\n------------ \(name)WARNING ------------\n"
                 + msg
@@ -102,6 +119,7 @@ public struct QXLog {
         }else {
             msg = name + msg
         }
+        print(msg)
     }
     
 }

@@ -45,25 +45,26 @@ public struct QXLog {
         case error
         case warning
     }
-    
-    // 只有模拟器上需要输出日志
+    /// 日志模块名称
+    public var module:String?
     public var level:Level = .debug
     public var supports:[LogType] = [.default, .error, .warning]
     
     private var handler:ErrorHandler?
     
-    public init(with level:Level = .debug, handler:ErrorHandler? = nil) {
+    public init(with level:Level = .debug, module:String? = nil, handler:ErrorHandler? = nil) {
         if level == .default {
             self.level   = .debug
         }else {
             self.level   = level
         }
+        self.module = module
         self.handler = handler
     }
     
     /// 错误日志
     /// - Parameter error: 错误
-    public func error(_ error:Error?, level:Level = .debug, module:String? = nil)  {
+    public func error(_ error:Error?, level:Level = .debug)  {
         guard let error = error else {
             return
         }
@@ -71,9 +72,9 @@ public struct QXLog {
             handler(error)
             return
         }
-        out(error, type: .error, module: module, level: level)
+        out(error, type: .error, level: level)
     }
-    public func out(_ items: Any..., type:LogType = .default, module:String? = nil, level:Level = .default)  {
+    public func out(_ items: Any..., type:LogType = .default, level:Level = .default)  {
         guard supports.contains(type) else {
             return
         }
@@ -89,17 +90,17 @@ public struct QXLog {
             return
         }
         var  msg = items.map({"\($0)"}).joined(separator: " ")
-        if let name = module {
-            msg = "[\(name)] : " + msg
-        }
+        let name = self.module != nil ? "[\(self.module!)]" : ""
         if type == .warning {
-            msg = "\n------------ WARNING ------------\n"
+            msg = "\n------------ \(name)WARNING ------------\n"
                 + msg
                 + "\n---------------------------------"
         }else if type == .error {
-            msg = "\n------------ ERROR ------------\n"
+            msg = "\n------------ \(name)ERROR ------------\n"
                 + msg
                 + "\n--------------------------------"
+        }else {
+            msg = name + msg
         }
     }
     

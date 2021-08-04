@@ -26,7 +26,7 @@ func qx_debug(block:(()->Void)? = nil) -> Bool {
 }
 
 public struct QXLog {
-    public typealias ErrorHandler = (Error)->Void
+    public typealias ErrorHandler = (QXLog, Error)->Void
     /// 日志输出级别
     public enum Level {
         case `default`
@@ -69,7 +69,7 @@ public struct QXLog {
             return
         }
         if let handler = self.handler {
-            handler(error)
+            handler(self, error)
             return
         }
         out(error, type: .error, level: level)

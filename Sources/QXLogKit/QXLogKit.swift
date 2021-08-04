@@ -30,8 +30,8 @@ public struct QXLog {
     /// 日志输出级别
     public enum Source {
         case unknown
-        case file(id:String, line:Int)
-        case funcation(file:String, name:String, line:Int)
+        case file(id:String = #file, line:Int = #line)
+        case funcation(file:String = #fileID, name:String = #function, line:Int = #line)
         
         public var info:String {
             switch self {
@@ -89,9 +89,9 @@ public struct QXLog {
             handler(self, error, source)
             return
         }
-        out(source.info, error, type: .error, level: level)
+        out(error, type: .error, level: level, source: source)
     }
-    public func out(_ items: Any..., type:LogType = .default, level:Level = .default)  {
+    public func out(_ items: Any..., type:LogType = .default, level:Level = .default, source:Source = .unknown)  {
         guard supports.contains(type) else {
             return
         }
@@ -107,6 +107,9 @@ public struct QXLog {
             return
         }
         var  msg = items.map({"\($0)"}).joined(separator: " ")
+        if source.info.count > 0 {
+            msg = source.info + "message : " + msg
+        }
         let name = self.module != nil ? "[\(self.module!)] : " : ""
         if type == .warning {
             msg = "\n------------ \(name)WARNING ------------\n"
